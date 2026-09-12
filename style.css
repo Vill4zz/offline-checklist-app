@@ -325,3 +325,77 @@ li {
   font-size: 0.85rem;
   color: #475569;
 }
+
+@media (max-width: 600px) {
+  body {
+    margin: 1rem auto;
+    padding: 0 0.75rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .btn,
+  .btn-primary,
+  .btn-sync,
+  .btn-logout {
+    width: 100%;
+  }
+
+  .btn-logout {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+
+  .log-header,
+  .log-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .log-meta {
+    gap: 4px;
+  }
+
+  .modal-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  body {
+    padding: 0 0.5rem;
+  }
+
+  .card {
+    padding: 0.85rem;
+    border-radius: 10px;
+  }
+
+  .status {
+    font-size: 0.88rem;
+  }
+
+  .muted-note {
+    font-size: 0.8rem;
+  }
+
+  .log-card {
+    padding: 12px 10px;
+  }
+
+  .log-summary {
+    min-height: 0;
+    font-size: 0.88rem;
+  }
+
+  .modal-box {
+    padding: 1rem;
+  }
+}

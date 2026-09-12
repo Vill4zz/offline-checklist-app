@@ -29,12 +29,9 @@
   <!-- 2. Main Application Container (Hidden until authenticated) -->
   <div id="appContainer" style="display: none;">
     <div class="card">
-      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 0.5rem; flex-wrap: wrap;">
         <h2 style="margin: 0;">✈️ Aircraft Maintenance Log</h2>
-        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
-          <span id="welcomeUser" style="font-weight: 600; color: #334155;"></span>
-          <button id="logoutBtn" class="btn btn-logout" style="float: none;">Sign Out</button>
-        </div>
+        <button id="logoutBtn" class="btn btn-logout" style="float: none;">Sign Out</button>
       </div>
       <div id="status" class="status online">Online Mode</div>
       <div id="loggedInMechanicDisplay" class="muted-note">Mechanic: <strong id="loggedInMechanicName">Loading...</strong></div>

@@ -6,7 +6,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_
 // --- AUTHENTICATION HANDLING ---
 const authContainer = document.getElementById("authContainer");
 const appContainer = document.getElementById("appContainer");
-const welcomeUser = document.getElementById("welcomeUser");
 const loggedInMechanicNameEl = document.getElementById("loggedInMechanicName");
 
 // Check active session on initial load
@@ -27,9 +26,6 @@ function handleAuthSession(session) {
   } else {
     authContainer.style.display = "block";
     appContainer.style.display = "none";
-    if (welcomeUser) {
-      welcomeUser.textContent = "";
-    }
     if (loggedInMechanicNameEl) {
       loggedInMechanicNameEl.textContent = "Loading...";
     }
@@ -40,10 +36,6 @@ function setLoggedInUserDisplay(session) {
   const user = session?.user;
   const fullName = user?.user_metadata?.full_name || user?.email || "Unknown Mechanic";
   const displayName = fullName.includes("@") ? fullName.split("@")[0] : fullName;
-
-  if (welcomeUser) {
-    welcomeUser.textContent = `Welcome, ${displayName}`;
-  }
 
   if (loggedInMechanicNameEl) {
     loggedInMechanicNameEl.textContent = displayName;
