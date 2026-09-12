@@ -18,7 +18,7 @@
     .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: #2563eb; color: white; margin-top: 5px; width: 100%; }
     .btn-sync { background: #0f172a; color: white; width: 100%; margin-bottom: 1rem; }
-    .btn-logout { background: #ef4444; color: white; float: right; padding: 6px 12px; font-size: 0.8rem; }
+    .btn-logout { background: #ef4444; color: white; float: none; padding: 6px 12px; font-size: 0.8rem; }
     ul { list-style: none; padding: 0; }
     li { background: white; padding: 12px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: flex-start; }
     .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
@@ -50,8 +50,13 @@
   <!-- 2. Main Application Container (Hidden until authenticated) -->
   <div id="appContainer" style="display: none;">
     <div class="card">
-      <button id="logoutBtn" class="btn btn-logout">Sign Out</button>
-      <h2>✈️ Aircraft Maintenance Log</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="margin: 0;">✈️ Aircraft Maintenance Log</h2>
+        <div>
+          <span id="welcomeUser" style="margin-right: 10px; font-weight: 600; color: #334155;"></span>
+          <button id="logoutBtn" class="btn btn-logout" style="float: none;">Sign Out</button>
+        </div>
+      </div>
       <div id="status" class="status online">Online Mode</div>
 
       <form id="taskForm">

@@ -6,6 +6,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_
 // --- AUTHENTICATION HANDLING ---
 const authContainer = document.getElementById("authContainer");
 const appContainer = document.getElementById("appContainer");
+const welcomeUser = document.getElementById("welcomeUser");
 
 // Check active session on initial load
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
@@ -21,9 +22,15 @@ function handleAuthSession(session) {
   if (session) {
     authContainer.style.display = "none";
     appContainer.style.display = "block";
+    const email = session.user?.email || "Mechanic";
+    const displayName = email.includes("@") ? email.split("@")[0] : email;
+    welcomeUser.textContent = `Welcome, ${displayName}`;
   } else {
     authContainer.style.display = "block";
     appContainer.style.display = "none";
+    if (welcomeUser) {
+      welcomeUser.textContent = "";
+    }
   }
 }
 
@@ -40,9 +47,12 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 });
 
 // Logout Button Handler
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  await supabaseClient.auth.signOut();
-});
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+  });
+}
 // -------------------------------
 
 // Toggle custom text box if "Add New" is chosen
