@@ -196,25 +196,47 @@ function loadTasks() {
   const transaction = db.transaction(["inspections"], "readonly");
   const store = transaction.objectStore("inspections");
 
+  const tasks = [];
+
   store.openCursor().onsuccess = (e) => {
     const cursor = e.target.result;
     if (cursor) {
-      const item = cursor.value;
+      tasks.push(cursor.value);
+      cursor.continue();
+      return;
+    }
+
+    if (tasks.length === 0) {
+      list.innerHTML = '<li class="empty-state">No logged inspections yet.</li>';
+      return;
+    }
+
+    tasks.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    tasks.forEach((item) => {
       const isSynced = item.sync_status === "synced";
+      const summary = item.checklist_data?.details || "No details provided";
+      const preview = summary.length > 120 ? summary.substring(0, 117) + "..." : summary;
       const li = document.createElement("li");
+      li.className = `log-card ${isSynced ? 'synced' : 'pending'}`;
       li.innerHTML = `
-        <div>
-          <strong>[${item.aircraft_id}] ${item.checklist_data.category}</strong>
-          <div class="meta">${item.checklist_data.details} • <em>${item.timestamp}</em></div>
-          <div class="personnel">👤 Inspector / Mechanic: <strong>${item.technician_id}</strong></div>
+        <div class="log-header">
+          <div>
+            <div class="log-tail">${item.aircraft_id}</div>
+            <div class="log-category">${item.checklist_data.category}</div>
+          </div>
+          <span class="status-pill ${isSynced ? 'synced' : 'pending'}">
+            ${isSynced ? 'Synced' : 'Pending'}
+          </span>
         </div>
-        <span class="badge ${isSynced ? 'synced' : 'pending'}">
-          ${isSynced ? 'Synced' : 'Pending Sync'}
-        </span>
+        <p class="log-summary">${preview}</p>
+        <div class="log-meta">
+          <span>👤 ${item.technician_id}</span>
+          <span>${item.timestamp}</span>
+        </div>
       `;
       list.appendChild(li);
-      cursor.continue();
-    }
+    });
   };
 }
 

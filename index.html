@@ -29,6 +29,20 @@
     #customMechanic { display: none; margin-top: 4px; }
     .muted-note { margin: 0 0 1rem 0; padding: 8px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; font-size: 0.9rem; }
     .muted-note strong { color: #0f172a; }
+    .log-panel { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+    .log-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .log-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #94a3b8; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); }
+    .log-card.synced { border-left-color: #22c55e; }
+    .log-card.pending { border-left-color: #f59e0b; }
+    .log-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+    .log-tail { font-weight: 700; color: #0f172a; }
+    .log-category { color: #334155; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .log-summary { color: #475569; font-size: 0.92rem; line-height: 1.45; margin: 0 0 8px 0; }
+    .log-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: #64748b; }
+    .status-pill { font-size: 0.72rem; padding: 4px 8px; border-radius: 999px; font-weight: 700; text-transform: uppercase; }
+    .status-pill.pending { background: #fef3c7; color: #92400e; }
+    .status-pill.synced { background: #dcfce7; color: #166534; }
+    .empty-state { padding: 18px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; background: #f8fafc; }
   </style>
 </head>
 <body>
@@ -100,7 +114,12 @@
     <button id="syncBtn" class="btn btn-sync">Sync Offline Logs to Cloud Database</button>
 
     <h3>Logged Inspections</h3>
-    <ul id="taskList"></ul>
+    <div class="log-panel">
+      <ul id="taskList" class="log-list"></ul>
+    </div>
+    <div id="emptyState" class="empty-state" style="display: none;">
+      No inspection logs found. Perform a maintenance check to display logs here.
+    </div>
   </div>
 
   <!-- Link your external app.js file here -->
