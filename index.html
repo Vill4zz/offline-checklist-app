@@ -16,8 +16,9 @@
     .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
     input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
     .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: #2563eb; color: white; margin-top: 5px; }
+    .btn-primary { background: #2563eb; color: white; margin-top: 5px; width: 100%; }
     .btn-sync { background: #0f172a; color: white; width: 100%; margin-bottom: 1rem; }
+    .btn-logout { background: #ef4444; color: white; float: right; padding: 6px 12px; font-size: 0.8rem; }
     ul { list-style: none; padding: 0; }
     li { background: white; padding: 12px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: flex-start; }
     .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
@@ -30,231 +31,71 @@
 </head>
 <body>
 
-  <div class="card">
-    <h2>✈️ Aircraft Maintenance Log</h2>
-    <div id="status" class="status online">Online Mode</div>
-
-    <form id="taskForm">
+  <!-- 1. Authentication Login Screen Container -->
+  <div id="authContainer" class="card">
+    <h2>🔐 Mechanic Sign In</h2>
+    <form id="loginForm">
       <div class="form-group">
-        <!-- 1. Tail Number -->
-        <input type="text" id="tailNumber" placeholder="Aircraft Tail # (e.g. RP-C1234)" required>
-        
-        <!-- 2. Category -->
-        <select id="category" required>
-          <option value="">Select Maintenance Category...</option>
-          <option value="Avionics & Radar">Avionics & Radar System</option>
-          <option value="Turbine Engine Inspection">Turbine Engine & Propulsion</option>
-          <option value="Hydraulic & Landing Gear">Hydraulics & Landing Gear</option>
-          <option value="Airframe & Control Surfaces">Airframe & Control Surfaces</option>
-        </select>
-        
-        <!-- 3. Details -->
-        <input type="text" id="taskInput" placeholder="Inspection Details / Findings..." required>
-
-        <!-- 4. Inspector/Mechanic Dropdown List -->
-        <select id="mechanicSelect" required onchange="toggleCustomMechanic(this)">
-          <option value="">Select Assigned Inspector/Mechanic...</option>
-          <option value="Engr. Juan Dela Cruz (Avionics Tech)">Engr. Juan Dela Cruz (Avionics Tech)</option>
-          <option value="Engr. Maria Santos (Powerplant Lead)">Engr. Maria Santos (Powerplant Lead)</option>
-          <option value="Tech. Mark Reyes (Airframe Specialist)">Tech. Mark Reyes (Airframe Specialist)</option>
-          <option value="Tech. Alex Garcia (Hydraulics Mechanic)">Tech. Alex Garcia (Hydraulics Mechanic)</option>
-          <option value="custom">➕ Add New / Custom Name...</option>
-        </select>
-
-        <!-- Hidden input field if "Add New" is selected -->
-        <input type="text" id="customMechanic" placeholder="Type Inspector/Mechanic Name...">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="mechanic@aero.com" required>
       </div>
-
-      <button type="submit" class="btn btn-primary">Log Maintenance Check</button>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Sign In to Hangar App</button>
     </form>
   </div>
 
-  <button id="syncBtn" class="btn btn-sync">Sync Offline Logs to Cloud Database</button>
+  <!-- 2. Main Application Container (Hidden until authenticated) -->
+  <div id="appContainer" style="display: none;">
+    <div class="card">
+      <button id="logoutBtn" class="btn btn-logout">Sign Out</button>
+      <h2>✈️ Aircraft Maintenance Log</h2>
+      <div id="status" class="status online">Online Mode</div>
 
-  <h3>Logged Inspections</h3>
-  <ul id="taskList"></ul>
+      <form id="taskForm">
+        <div class="form-group">
+          <!-- Tail Number -->
+          <input type="text" id="tailNumber" placeholder="Aircraft Tail # (e.g. RP-C1234)" required>
+          
+          <!-- Category -->
+          <select id="category" required>
+            <option value="">Select Maintenance Category...</option>
+            <option value="Avionics & Radar">Avionics & Radar System</option>
+            <option value="Turbine Engine Inspection">Turbine Engine & Propulsion</option>
+            <option value="Hydraulic & Landing Gear">Hydraulics & Landing Gear</option>
+            <option value="Airframe & Control Surfaces">Airframe & Control Surfaces</option>
+          </select>
+          
+          <!-- Details -->
+          <input type="text" id="taskInput" placeholder="Inspection Details / Findings..." required>
 
-  <script>
-    // Initialize Supabase Client
-    const SUPABASE_URL = 'https://runvdydriatawkpnumtx.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_IuAUOGkafsswN2Li6VVu_g_yK4D2fNU';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+          <!-- Inspector/Mechanic Dropdown List -->
+          <select id="mechanicSelect" required onchange="toggleCustomMechanic(this)">
+            <option value="">Select Assigned Inspector/Mechanic...</option>
+            <option value="Engr. Juan Dela Cruz (Avionics Tech)">Engr. Juan Dela Cruz (Avionics Tech)</option>
+            <option value="Engr. Maria Santos (Powerplant Lead)">Engr. Maria Santos (Powerplant Lead)</option>
+            <option value="Tech. Mark Reyes (Airframe Specialist)">Tech. Mark Reyes (Airframe Specialist)</option>
+            <option value="Tech. Alex Garcia (Hydraulics Mechanic)">Tech. Alex Garcia (Hydraulics Mechanic)</option>
+            <option value="custom">➕ Add New / Custom Name...</option>
+          </select>
 
-    // Toggle custom text box if "Add New" is chosen
-    function toggleCustomMechanic(select) {
-      const customInput = document.getElementById("customMechanic");
-      if (select.value === "custom") {
-        customInput.style.display = "block";
-        customInput.required = true;
-      } else {
-        customInput.style.display = "none";
-        customInput.required = false;
-      }
-    }
+          <!-- Hidden input field if "Add New" is selected -->
+          <input type="text" id="customMechanic" placeholder="Type Inspector/Mechanic Name...">
+        </div>
 
-    // 1. Setup IndexedDB (Version 5 with UUID keyPath)
-    let db;
-    const request = indexedDB.open("AeroChecklistDB", 5);
+        <button type="submit" class="btn btn-primary">Log Maintenance Check</button>
+      </form>
+    </div>
 
-    request.onupgradeneeded = (e) => {
-      db = e.target.result;
-      if (!db.objectStoreNames.contains("inspections")) {
-        db.createObjectStore("inspections", { keyPath: "id" });
-      }
-    };
+    <button id="syncBtn" class="btn btn-sync">Sync Offline Logs to Cloud Database</button>
 
-    request.onsuccess = (e) => {
-      db = e.target.result;
-      loadTasks();
-      if (navigator.onLine) {
-        syncPendingLogs();
-      }
-    };
+    <h3>Logged Inspections</h3>
+    <ul id="taskList"></ul>
+  </div>
 
-    // 2. Monitor Network Status
-    const statusDiv = document.getElementById("status");
-    function updateStatus() {
-      if (navigator.onLine) {
-        statusDiv.textContent = "Online Mode (Ready to Sync)";
-        statusDiv.className = "status online";
-        syncPendingLogs();
-      } else {
-        statusDiv.textContent = "Offline Mode (Saving locally to IndexedDB)";
-        statusDiv.className = "status offline";
-      }
-    }
-    window.addEventListener("online", updateStatus);
-    window.addEventListener("offline", updateStatus);
-    updateStatus();
-
-    // 3. Add Log to Local Database & Try Cloud Sync
-    document.getElementById("taskForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const mechanicChoice = document.getElementById("mechanicSelect").value;
-      const finalMechanic = mechanicChoice === "custom" 
-        ? document.getElementById("customMechanic").value 
-        : mechanicChoice;
-      
-      const entryId = crypto.randomUUID();
-      const entry = {
-        id: entryId,
-        aircraft_id: document.getElementById("tailNumber").value,
-        technician_id: finalMechanic,
-        checklist_data: {
-          category: document.getElementById("category").value,
-          details: document.getElementById("taskInput").value
-        },
-        status: "completed", // maps to database check constraint ('draft', 'completed', 'verified')
-        sync_status: "pending_sync",
-        timestamp: new Date().toLocaleString()
-      };
-
-      const transaction = db.transaction(["inspections"], "readwrite");
-      const store = transaction.objectStore("inspections");
-      store.put(entry);
-
-      transaction.oncomplete = async () => {
-        document.getElementById("taskForm").reset();
-        document.getElementById("customMechanic").style.display = "none";
-        loadTasks();
-
-        if (navigator.onLine) {
-          await pushLogToSupabase(entry);
-        }
-      };
-    });
-
-    // Push single log to Supabase PostgreSQL
-    async function pushLogToSupabase(item) {
-      try {
-        const { error } = await supabaseClient
-          .from('maintenance_logs')
-          .upsert([{
-            id: item.id,
-            aircraft_id: item.aircraft_id,
-            technician_id: item.technician_id,
-            checklist_data: item.checklist_data,
-            status: item.status
-          }]);
-
-        if (!error) {
-          // Update local sync status to synced
-          const tx = db.transaction(["inspections"], "readwrite");
-          const store = tx.objectStore("inspections");
-          item.sync_status = "synced";
-          store.put(item);
-          tx.oncomplete = () => loadTasks();
-        } else {
-          console.error("Sync error:", error);
-        }
-      } catch (err) {
-        console.error("Network or request error during sync:", err);
-      }
-    }
-
-    // 4. Render Logged Items from IndexedDB
-    function loadTasks() {
-      const list = document.getElementById("taskList");
-      list.innerHTML = "";
-
-      const transaction = db.transaction(["inspections"], "readonly");
-      const store = transaction.objectStore("inspections");
-
-      store.openCursor().onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-          const item = cursor.value;
-          const isSynced = item.sync_status === "synced";
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <div>
-              <strong>[${item.aircraft_id}] ${item.checklist_data.category}</strong>
-              <div class="meta">${item.checklist_data.details} • <em>${item.timestamp}</em></div>
-              <div class="personnel">👤 Inspector / Mechanic: <strong>${item.technician_id}</strong></div>
-            </div>
-            <span class="badge ${isSynced ? 'synced' : 'pending'}">
-              ${isSynced ? 'Synced' : 'Pending Sync'}
-            </span>
-          `;
-          list.appendChild(li);
-          cursor.continue();
-        }
-      };
-    }
-
-    // 5. Batch Sync Button Handler
-    document.getElementById("syncBtn").addEventListener("click", () => {
-      if (!navigator.onLine) {
-        alert("Cannot sync: Device is offline!");
-        return;
-      }
-      syncPendingLogs();
-      alert("Sync process triggered with cloud database!");
-    });
-
-    async function syncPendingLogs() {
-      if (!navigator.onLine || !db) return;
-
-      const transaction = db.transaction(["inspections"], "readonly");
-      const store = transaction.objectStore("inspections");
-
-      store.openCursor().onsuccess = async (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-          const item = cursor.value;
-          if (item.sync_status !== "synced") {
-            await pushLogToSupabase(item);
-          }
-          cursor.continue();
-        }
-      };
-    }
-
-    // 6. Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed:', err));
-    }
-  </script>
+  <!-- Link your external app.js file here -->
+  <script src="app.js"></script>
 </body>
 </html>
