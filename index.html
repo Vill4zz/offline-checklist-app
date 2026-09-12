@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aircraft Maintenance Log</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 2rem auto; padding: 0 1rem; background: #f8fafc; color: #0f172a; }
+    .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+    h2 { margin-top: 0; color: #1e293b; }
+    .status { padding: 10px; font-weight: 600; margin-bottom: 1rem; border-radius: 6px; text-align: center; }
+    .online { background: #dcfce7; color: #166534; }
+    .offline { background: #fee2e2; color: #991b1b; }
+    .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
+    input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: #2563eb; color: white; margin-top: 5px; }
+    .btn-sync { background: #0f172a; color: white; width: 100%; margin-bottom: 1rem; }
+    ul { list-style: none; padding: 0; }
+    li { background: white; padding: 12px; margin-bottom: 8px; border-radius: 6px; border-left: 4px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: flex-start; }
+    .badge { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+    .pending { background: #fef3c7; color: #92400e; }
+    .synced { background: #dcfce7; color: #166534; }
+    .meta { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    .personnel { font-size: 0.8rem; color: #334155; margin-top: 6px; font-weight: 500; }
+    #customMechanic { display: none; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>✈️ Aircraft Maintenance Log</h2>
+    <div id="status" class="status online">Online Mode</div>
+
+    <form id="taskForm">
+      <div class="form-group">
+        <!-- 1. Tail Number -->
+        <input type="text" id="tailNumber" placeholder="Aircraft Tail # (e.g. RP-C1234)" required>
+        
+        <!-- 2. Category -->
+        <select id="category" required>
+          <option value="">Select Maintenance Category...</option>
+          <option value="Avionics & Radar">Avionics & Radar System</option>
+          <option value="Turbine Engine Inspection">Turbine Engine & Propulsion</option>
+          <option value="Hydraulic & Landing Gear">Hydraulics & Landing Gear</option>
+          <option value="Airframe & Control Surfaces">Airframe & Control Surfaces</option>
+        </select>
+        
+        <!-- 3. Details -->
+        <input type="text" id="taskInput" placeholder="Inspection Details / Findings..." required>
+
+        <!-- 4. Inspector/Mechanic Dropdown List -->
+        <select id="mechanicSelect" required onchange="toggleCustomMechanic(this)">
+          <option value="">Select Assigned Inspector/Mechanic...</option>
+          <option value="Engr. Juan Dela Cruz (Avionics Tech)">Engr. Juan Dela Cruz (Avionics Tech)</option>
+          <option value="Engr. Maria Santos (Powerplant Lead)">Engr. Maria Santos (Powerplant Lead)</option>
+          <option value="Tech. Mark Reyes (Airframe Specialist)">Tech. Mark Reyes (Airframe Specialist)</option>
+          <option value="Tech. Alex Garcia (Hydraulics Mechanic)">Tech. Alex Garcia (Hydraulics Mechanic)</option>
+          <option value="custom">➕ Add New / Custom Name...</option>
+        </select>
+
+        <!-- Hidden input field if "Add New" is selected -->
+        <input type="text" id="customMechanic" placeholder="Type Inspector/Mechanic Name...">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Log Maintenance Check</button>
+    </form>
+  </div>
+
+  <button id="syncBtn" class="btn btn-sync">Sync Offline Logs to Cloud Database</button>
+
+  <h3>Logged Inspections</h3>
+  <ul id="taskList"></ul>
+
+  <script>
+    // Toggle custom text box if "Add New" is chosen
+    function toggleCustomMechanic(select) {
+      const customInput = document.getElementById("customMechanic");
+      if (select.value === "custom") {
+        customInput.style.display = "block";
+        customInput.required = true;
+      } else {
+        customInput.style.display = "none";
+        customInput.required = false;
+      }
+    }
+
+    // 1. Setup IndexedDB (Version 4)
+    let db;
+    const request = indexedDB.open("AeroChecklistDB", 4);
+
+    request.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("inspections")) {
+        db.createObjectStore("inspections", { keyPath: "id", autoIncrement: true });
+      }
+    };
+
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      loadTasks();
+    };
+
+    // 2. Monitor Network Status
+    const statusDiv = document.getElementById("status");
+    function updateStatus() {
+      if (navigator.onLine) {
+        statusDiv.textContent = "Online Mode (Ready to Sync)";
+        statusDiv.className = "status online";
+      } else {
+        statusDiv.textContent = "Offline Mode (Saving locally to IndexedDB)";
+        statusDiv.className = "status offline";
+      }
+    }
+    window.addEventListener("online", updateStatus);
+    window.addEventListener("offline", updateStatus);
+    updateStatus();
+
+    // 3. Add Log to Local Database
+    document.getElementById("taskForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const mechanicChoice = document.getElementById("mechanicSelect").value;
+      const finalMechanic = mechanicChoice === "custom" 
+        ? document.getElementById("customMechanic").value 
+        : mechanicChoice;
+      
+      const entry = {
+        tailNumber: document.getElementById("tailNumber").value,
+        category: document.getElementById("category").value,
+        details: document.getElementById("taskInput").value,
+        personnel: finalMechanic,
+        status: "pending_sync",
+        timestamp: new Date().toLocaleString()
+      };
+
+      const transaction = db.transaction(["inspections"], "readwrite");
+      const store = transaction.objectStore("inspections");
+      store.add(entry);
+
+      transaction.oncomplete = () => {
+        document.getElementById("taskForm").reset();
+        document.getElementById("customMechanic").style.display = "none";
+        loadTasks();
+      };
+    });
+
+    // 4. Render Logged Items
+    function loadTasks() {
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+
+      const transaction = db.transaction(["inspections"], "readonly");
+      const store = transaction.objectStore("inspections");
+
+      store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          const item = cursor.value;
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <div>
+              <strong>[${item.tailNumber}] ${item.category}</strong>
+              <div class="meta">${item.details} • <em>${item.timestamp}</em></div>
+              <div class="personnel">👤 Inspector / Mechanic: <strong>${item.personnel}</strong></div>
+            </div>
+            <span class="badge ${item.status === 'synced' ? 'synced' : 'pending'}">
+              ${item.status === 'synced' ? 'Synced' : 'Pending Sync'}
+            </span>
+          `;
+          list.appendChild(li);
+          cursor.continue();
+        }
+      };
+    }
+
+    // 5. Simulated Sync
+    document.getElementById("syncBtn").addEventListener("click", () => {
+      if (!navigator.onLine) {
+        alert("Cannot sync: Device is offline!");
+        return;
+      }
+
+      const transaction = db.transaction(["inspections"], "readwrite");
+      const store = transaction.objectStore("inspections");
+
+      store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          if (cursor.value.status === "pending_sync") {
+            const updated = cursor.value;
+            updated.status = "synced";
+            cursor.update(updated);
+          }
+          cursor.continue();
+        }
+      };
+
+      transaction.oncomplete = () => {
+        alert("All local maintenance logs synced successfully!");
+        loadTasks();
+      };
+    });
+
+    // 6. Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed:', err));
+    }
+  </script>
+</body>
+</html>
