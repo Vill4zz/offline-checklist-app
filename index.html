@@ -31,7 +31,8 @@
     .muted-note strong { color: #0f172a; }
     .log-panel { max-height: 420px; overflow-y: auto; padding-right: 4px; }
     .log-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-    .log-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #94a3b8; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); display: flex; flex-direction: column; gap: 10px; }
+    .log-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #94a3b8; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06); display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .log-card:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); }
     .log-card.synced { border-left-color: #22c55e; }
     .log-card.pending { border-left-color: #f59e0b; }
     .log-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
@@ -43,6 +44,14 @@
     .status-pill.pending { background: #fef3c7; color: #92400e; }
     .status-pill.synced { background: #dcfce7; color: #166534; }
     .empty-state { padding: 18px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; background: #f8fafc; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; width: min(540px, 100%); border-radius: 12px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.2); padding: 1.25rem; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .modal-header h3 { margin: 0; }
+    .modal-close { border: none; background: #e2e8f0; color: #0f172a; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1.1rem; }
+    .modal-detail { white-space: pre-wrap; line-height: 1.6; color: #334155; margin: 0; }
+    .modal-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 1rem; font-size: 0.85rem; color: #475569; }
   </style>
 </head>
 <body>
@@ -119,6 +128,23 @@
     </div>
     <div id="emptyState" class="empty-state" style="display: none;">
       No inspection logs found. Perform a maintenance check to display logs here.
+    </div>
+  </div>
+
+  <div id="logDetailModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="logDetailTitle">
+      <div class="modal-header">
+        <h3 id="logDetailTitle">Maintenance Details</h3>
+        <button id="closeModalBtn" class="modal-close" aria-label="Close">×</button>
+      </div>
+      <div class="modal-meta">
+        <div><strong>Aircraft:</strong> <span id="modalAircraft"></span></div>
+        <div><strong>Category:</strong> <span id="modalCategory"></span></div>
+        <div><strong>Mechanic:</strong> <span id="modalMechanic"></span></div>
+        <div><strong>Status:</strong> <span id="modalStatus"></span></div>
+        <div style="grid-column: 1 / -1;"><strong>Timestamp:</strong> <span id="modalTimestamp"></span></div>
+      </div>
+      <p id="modalDetails" class="modal-detail"></p>
     </div>
   </div>
 

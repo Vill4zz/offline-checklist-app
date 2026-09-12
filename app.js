@@ -235,6 +235,7 @@ function loadTasks() {
           <span>${item.timestamp}</span>
         </div>
       `;
+      li.addEventListener("click", () => openLogDetails(item));
       list.appendChild(li);
     });
   };
@@ -272,3 +273,42 @@ async function syncPendingLogs() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed:', err));
 }
+
+// Log Detail Modal Handling
+const logDetailModal = document.getElementById("logDetailModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+
+function openLogDetails(item) {
+  const detailText = item.checklist_data?.details || "No details provided.";
+  document.getElementById("modalAircraft").textContent = item.aircraft_id;
+  document.getElementById("modalCategory").textContent = item.checklist_data?.category || "N/A";
+  document.getElementById("modalMechanic").textContent = item.technician_id || "Unknown Mechanic";
+  document.getElementById("modalStatus").textContent = item.sync_status === "synced" ? "Synced" : "Pending Sync";
+  document.getElementById("modalTimestamp").textContent = item.timestamp || "N/A";
+  document.getElementById("modalDetails").textContent = detailText;
+  logDetailModal.classList.add("show");
+  logDetailModal.setAttribute("aria-hidden", "false");
+}
+
+function closeLogDetails() {
+  logDetailModal.classList.remove("show");
+  logDetailModal.setAttribute("aria-hidden", "true");
+}
+
+if (closeModalBtn) {
+  closeModalBtn.addEventListener("click", closeLogDetails);
+}
+
+if (logDetailModal) {
+  logDetailModal.addEventListener("click", (event) => {
+    if (event.target === logDetailModal) {
+      closeLogDetails();
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && logDetailModal && logDetailModal.classList.contains("show")) {
+    closeLogDetails();
+  }
+});
