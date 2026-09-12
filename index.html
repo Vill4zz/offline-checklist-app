@@ -27,6 +27,8 @@
     .meta { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
     .personnel { font-size: 0.8rem; color: #334155; margin-top: 6px; font-weight: 500; }
     #customMechanic { display: none; margin-top: 4px; }
+    .muted-note { margin: 0 0 1rem 0; padding: 8px 10px; border-radius: 6px; background: #f1f5f9; color: #334155; font-size: 0.9rem; }
+    .muted-note strong { color: #0f172a; }
   </style>
 </head>
 <body>
@@ -58,6 +60,7 @@
         </div>
       </div>
       <div id="status" class="status online">Online Mode</div>
+      <div id="loggedInMechanicDisplay" class="muted-note">Mechanic: <strong id="loggedInMechanicName">Loading...</strong></div>
 
       <form id="taskForm">
         <div class="form-group">
@@ -76,8 +79,8 @@
           <!-- Details -->
           <input type="text" id="taskInput" placeholder="Inspection Details / Findings..." required>
 
-          <!-- Inspector/Mechanic Dropdown List -->
-          <select id="mechanicSelect" required onchange="toggleCustomMechanic(this)">
+          <!-- Hidden: mechanic is automatically taken from the signed-in Supabase user -->
+          <select id="mechanicSelect" style="display: none;">
             <option value="">Select Assigned Inspector/Mechanic...</option>
             <option value="Engr. Juan Dela Cruz (Avionics Tech)">Engr. Juan Dela Cruz (Avionics Tech)</option>
             <option value="Engr. Maria Santos (Powerplant Lead)">Engr. Maria Santos (Powerplant Lead)</option>
@@ -87,7 +90,7 @@
           </select>
 
           <!-- Hidden input field if "Add New" is selected -->
-          <input type="text" id="customMechanic" placeholder="Type Inspector/Mechanic Name...">
+          <input type="text" id="customMechanic" placeholder="Type Inspector/Mechanic Name..." style="display:none;">
         </div>
 
         <button type="submit" class="btn btn-primary">Log Maintenance Check</button>

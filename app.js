@@ -7,6 +7,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_
 const authContainer = document.getElementById("authContainer");
 const appContainer = document.getElementById("appContainer");
 const welcomeUser = document.getElementById("welcomeUser");
+const loggedInMechanicNameEl = document.getElementById("loggedInMechanicName");
 
 // Check active session on initial load
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
@@ -22,15 +23,35 @@ function handleAuthSession(session) {
   if (session) {
     authContainer.style.display = "none";
     appContainer.style.display = "block";
-    const email = session.user?.email || "Mechanic";
-    const displayName = email.includes("@") ? email.split("@")[0] : email;
-    welcomeUser.textContent = `Welcome, ${displayName}`;
+    setLoggedInUserDisplay(session);
   } else {
     authContainer.style.display = "block";
     appContainer.style.display = "none";
     if (welcomeUser) {
       welcomeUser.textContent = "";
     }
+    if (loggedInMechanicNameEl) {
+      loggedInMechanicNameEl.textContent = "Loading...";
+    }
+  }
+}
+
+function setLoggedInUserDisplay(session) {
+  const user = session?.user;
+  const fullName = user?.user_metadata?.full_name || user?.email || "Unknown Mechanic";
+  const displayName = fullName.includes("@") ? fullName.split("@")[0] : fullName;
+
+  if (welcomeUser) {
+    welcomeUser.textContent = `Welcome, ${displayName}`;
+  }
+
+  if (loggedInMechanicNameEl) {
+    loggedInMechanicNameEl.textContent = displayName;
+  }
+
+  const mechanicSelect = document.getElementById("mechanicSelect");
+  if (mechanicSelect) {
+    mechanicSelect.value = displayName;
   }
 }
 
@@ -106,16 +127,16 @@ updateStatus();
 document.getElementById("taskForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const mechanicChoice = document.getElementById("mechanicSelect").value;
-  const finalMechanic = mechanicChoice === "custom" 
-    ? document.getElementById("customMechanic").value 
-    : mechanicChoice;
-  
+  // Get the signed-in Supabase user and use their name as the technician value
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const user = session?.user;
+  const loggedInMechanicName = user?.user_metadata?.full_name || user?.email || "Unknown Mechanic";
+
   const entryId = crypto.randomUUID();
   const entry = {
     id: entryId,
     aircraft_id: document.getElementById("tailNumber").value,
-    technician_id: finalMechanic,
+    technician_id: loggedInMechanicName,
     checklist_data: {
       category: document.getElementById("category").value,
       details: document.getElementById("taskInput").value
