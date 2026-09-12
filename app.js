@@ -1,10 +1,16 @@
 const SUPABASE_URL = 'https://runvdydriatawkpnumtx.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_IuAUOGkafsswN2Li6VVu_g_yK4D2fNU'; 
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// Use window.supabase if loaded via CDN
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
 
-// Open IndexedDB for offline logs
+// Open IndexedDB for offline logs safely
 let db;
+let dbReadyResolve;
+const dbReadyPromise = new Promise((resolve) => {
+  dbReadyResolve = resolve;
+});
+
 const request = indexedDB.open('AeroMaintenanceDB', 1);
 
 request.onupgradeneeded = (event) => {
@@ -17,11 +23,18 @@ request.onupgradeneeded = (event) => {
 request.onsuccess = (event) => {
   db = event.target.result;
   console.log('IndexedDB initialized successfully.');
+  dbReadyResolve(db); // Signal that db is ready
   syncOfflineLogs();
 };
 
-// Save log locally to IndexedDB
+request.onerror = (event) => {
+  console.error('IndexedDB failed to open:', event.target.error);
+};
+
+// Save log locally to IndexedDB (waits for db to be ready)
 async function saveLogLocally(logData) {
+  await dbReadyPromise; // Ensures db is initialized even if submitted instantly
+  
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['logs'], 'readwrite');
     const store = transaction.objectStore('logs');
@@ -29,7 +42,7 @@ async function saveLogLocally(logData) {
 
     request.onsuccess = () => {
       console.log('Saved log to local IndexedDB');
-      if (navigator.onLine) {
+      if (navigator.onLine && supabaseClient) {
         syncLogToSupabase(logData);
       }
       resolve(true);
@@ -40,7 +53,8 @@ async function saveLogLocally(logData) {
 
 // Sync individual log to Supabase
 async function syncLogToSupabase(logData) {
-  const { error } = await supabase
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient
     .from('maintenance_logs')
     .upsert([logData]);
 
@@ -58,6 +72,7 @@ window.addEventListener('online', () => {
 });
 
 async function syncOfflineLogs() {
+  await dbReadyPromise;
   if (!navigator.onLine || !db) return;
   
   const transaction = db.transaction(['logs'], 'readonly');
