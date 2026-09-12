@@ -216,7 +216,7 @@ function loadTasks() {
     tasks.forEach((item) => {
       const isSynced = item.sync_status === "synced";
       const summary = item.checklist_data?.details || "No details provided";
-      const preview = summary.length > 120 ? summary.substring(0, 117) + "..." : summary;
+      const preview = summary.length > 200 ? summary.substring(0, 197) + "..." : summary;
       const li = document.createElement("li");
       li.className = `log-card ${isSynced ? 'synced' : 'pending'}`;
       li.innerHTML = `
